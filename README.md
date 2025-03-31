@@ -18,8 +18,8 @@ pip install fixation-visualizer
 Or install from source:
 
 ```bash
-git clone https://github.com/yourusername/fixation-visualizer.git
-cd fixation-visualizer
+git clone https://github.com/mmazzini01/fixationvisualizerpy.git
+cd fixationvisualizerpy
 pip install -e .
 ```
 
@@ -53,6 +53,17 @@ Optional arguments:
 - `-a, --alpha`: Alpha value for overlay transparency
 - `-n, --normalized`: Flag for normalized coordinates
 
+## Example Usage
+
+The package includes example files in the `examples` directory:
+
+```bash
+# Run with example files
+python examples/visualize_fixations.py -i examples/face.jpg -c examples/eye_tracking_raw2_fixations.csv
+```
+
+The results will be saved in the `results` directory.
+
 ## Input Format
 
 The CSV file should contain the following columns:
@@ -65,3 +76,7 @@ The CSV file should contain the following columns:
 The visualizations are saved in the `results` directory:
 - `{image_name}_scanpath.png`: Visualization of fixation sequence
 - `{image_name}_saliency_map.png`: Heat map of fixation density
+
+## Author
+
+Matteo Mazzini (matteo.mazzini@estudiantat.upc.edu)
