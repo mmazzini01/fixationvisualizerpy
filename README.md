@@ -44,7 +44,7 @@ visualizer = FixationVisualizer(
 ### Command Line Interface
 
 ```bash
-python examples/visualize_fixations.py -i path/to/image.jpg -c path/to/fixations.csv
+python examples/run_visualizer.py -i path/to/image.jpg -c path/to/fixations.csv
 ```
 
 Optional arguments:
@@ -59,7 +59,7 @@ The package includes example files in the `examples` directory:
 
 ```bash
 # Run with example files
-python examples/visualize_fixations.py -i examples/face.jpg -c examples/eye_tracking_raw2_fixations.csv
+python examples/run_visualizer.py -i examples/face.jpg -c examples/eye_tracking_raw2_fixations.csv
 ```
 
 The results will be saved in the `results` directory.
