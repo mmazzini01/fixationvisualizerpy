@@ -5,6 +5,29 @@ import cv2
 import matplotlib.pyplot as plt
 
 class FixationVisualizer:
+    """
+    A class for visualizing eye tracking fixation data by generating scanpath and saliency map visualizations.
+
+    This class takes eye tracking data from a CSV file and creates visualizations to help analyze where users looked at an image.
+    It can generate two types of visualizations:
+    1. A scanpath showing the sequence and order of fixations as connected points
+    2. A heatmap (saliency map) showing the density of visual attention across the image
+
+    The scanpath visualization uses different colors to show the order of fixations, with point sizes indicating fixation duration.
+    The saliency map creates a heatmap overlay on the original image using Gaussian blurs weighted by fixation durations.
+
+    Args:
+        image_path (str): Path to the image file to analyze
+        csv_path (str): Path to CSV file with fixation data (columns: x, y, duration)
+        mode (str, optional): Type of visualization to create - "both", "scanpath", or "saliency". Defaults to "both"
+        sigma (int, optional): Controls the spread of the Gaussian blur for the saliency map. Defaults to 10
+        alpha (float, optional): Controls the transparency of the saliency map overlay (0-1). Defaults to 0.6
+        normalized (bool, optional): Whether input coordinates are normalized (0-1) or in pixels. Defaults to True
+
+    Raises:
+        FileNotFoundError: If the specified image file cannot be found/loaded
+        ValueError: If the CSV file is missing required columns (x, y, duration)
+    """
     def __init__(self, image_path, csv_path, mode="both", sigma=10, alpha=0.6, normalized=True):
         self.image_path = image_path
         self.csv_path = csv_path
@@ -32,6 +55,15 @@ class FixationVisualizer:
             self._generate_saliency_map()
 
     def _convert_fixations_to_numpy(self, fixations):
+        """
+        Converts fixation data from pandas DataFrame to structured numpy array.
+        
+        Args:
+            fixations (pd.DataFrame): DataFrame containing x, y coordinates and durations
+            
+        Returns:
+            np.ndarray: Structured array with x, y coordinates and normalized weights
+        """
         x = fixations['x'].astype(int).to_numpy()
         y = fixations['y'].astype(int).to_numpy()
         durations = fixations['duration'].astype(float).to_numpy()
@@ -39,17 +71,42 @@ class FixationVisualizer:
         return np.array(list(zip(x, y, norm_durations)), dtype=[('x', 'i4'), ('y', 'i4'), ('w', 'f4')])
 
     def _normalize_durations(self, durations):
+        """
+        Normalizes fixation durations to range [0,1]. Returns array of 1s if all durations are equal.
+        
+        Args:
+            durations (np.ndarray): Array of fixation durations
+            
+        Returns:
+            np.ndarray: Normalized durations between 0 and 1
+        """
         if durations.max() == durations.min():
             return np.ones_like(durations)
         return (durations - durations.min()) / (durations.max() - durations.min())
 
     def _scale_fixations(self, df, width, height):
+        """
+        Scales normalized fixation coordinates (0-1) to image pixel coordinates.
+        
+        Args:
+            df (pd.DataFrame): DataFrame with normalized coordinates
+            width (int): Image width in pixels
+            height (int): Image height in pixels
+            
+        Returns:
+            pd.DataFrame: DataFrame with scaled coordinates
+        """
         df = df.copy()
         df['x'] = df['x'] * width
         df['y'] = df['y'] * height
         return df
 
     def _plot_scanpath(self):
+        """
+        Creates scanpath visualization showing sequence of fixations.
+        Points are sized by duration and colored by order.
+        Saves plot to results/{image_name}_scanpath.png.
+        """
         durations = self.fixations['duration'].to_numpy()
         norm_durations = self._normalize_durations(durations)
         img_rgb = cv2.cvtColor(self.image, cv2.COLOR_BGR2RGB)
@@ -76,6 +133,11 @@ class FixationVisualizer:
         plt.close(fig)
 
     def _generate_saliency_map(self):
+        """
+        Creates saliency map visualization showing density of visual attention.
+        Uses Gaussian blurs weighted by fixation duration.
+        Saves map to results/{image_name}_saliency_map.png.
+        """
         fix_np = self._convert_fixations_to_numpy(self.fixations)
         saliency_map = np.zeros((self.height, self.width), dtype=np.float32)
         for point in fix_np:
@@ -102,4 +164,4 @@ class FixationVisualizer:
 
         os.makedirs("results", exist_ok=True)
         image_name = os.path.basename(self.image_path)
-        cv2.imwrite(f"results/{image_name}_saliency_map.png", overlay) 
+        cv2.imwrite(f"results/{image_name}_saliency_map.png", overlay)
