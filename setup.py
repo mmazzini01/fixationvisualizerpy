@@ -4,7 +4,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
 
 setup(
-    name="fixation-visualizer",
+    name="fixation_visualizer",
     version="0.1.0",
     author="Matteo Mazzini",
     author_email="matteo.mazzini@estudiantat.upc.edu",

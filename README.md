@@ -12,7 +12,7 @@ A Python package for visualizing eye tracking fixation data. This package provid
 ## Installation
 
 ```bash
-pip install fixation-visualizer
+pip install fixation_visualizer
 ```
 
 Or install from source:
