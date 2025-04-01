@@ -145,7 +145,7 @@ class FixationVisualizer:
 
             if 0 <= x < self.width and 0 <= y < self.height:
                 gaussian = np.zeros((self.height, self.width), dtype=np.float32)
-                intensity = 255 * 3.0 * weight
+                intensity = float(255 * 3.0 * weight)
                 radius = int(self.sigma)
                 cv2.circle(gaussian, (x, y), radius, intensity, -1)
                 gaussian = cv2.GaussianBlur(gaussian, (0, 0), self.sigma)
