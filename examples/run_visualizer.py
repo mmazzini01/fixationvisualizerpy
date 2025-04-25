@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 from fixation_visualizer import FixationVisualizer
-
+print("This is a test")
 def str2bool(v):
     if isinstance(v, bool):
         return v

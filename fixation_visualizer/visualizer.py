@@ -39,14 +39,23 @@ class FixationVisualizer:
         self.image = cv2.imread(image_path)
         if self.image is None:
             raise FileNotFoundError(f"Could not load image: {image_path}")
-
         self.fixations = pd.read_csv(csv_path)
         required_cols = {'x', 'y', 'duration'}
         if not required_cols.issubset(self.fixations.columns):
-            raise ValueError(f"CSV must contain columns: {required_cols}")
-
+                raise ValueError(f"CSV must contain columns: {required_cols}")
         self.height, self.width = self.image.shape[:2]
+
         if self.normalized:
+            # 🔁 Se fissazioni sono normalizzate, convertile in 'height' units e filtra quelle dentro immagine
+            self.fixations = self._convert_and_filter_fixations_psychopy(
+                self.fixations,
+                img_width_px=self.width,
+                img_height_px=self.height,
+                img_size_height_units=0.5,
+                screen_aspect=16 / 9  # oppure calcola dinamicamente se vuoi
+            )
+        else:
+            # 🔁 Se sono già in pixel, riscalale in base alla dimensione dell'immagine
             self.fixations = self._scale_fixations(self.fixations, self.width, self.height)
         if self.mode in ["scanpath", "both"]:
             self._plot_scanpath()
@@ -100,6 +109,31 @@ class FixationVisualizer:
         df['x'] = df['x'] * width
         df['y'] = df['y'] * height
         return df
+    
+    def _convert_and_filter_fixations_psychopy(self, fixations_norm, img_width_px, img_height_px, img_size_height_units=0.5, screen_aspect=16/9):
+        """
+        Converte fissazioni normalizzate (0-1) in coordinate 'height' di PsychoPy,
+        e filtra solo quelle dentro l'immagine centrata (0,0) con size img_size_height_units.
+        """
+        img_height_units = img_size_height_units
+        img_width_units = img_height_units * (img_width_px / img_height_px)
+
+        def norm_to_height_units(x_norm, y_norm):
+            x_centered = x_norm - 0.5
+            y_centered = 0.5 - y_norm  # inverte asse Y
+            x = x_centered * screen_aspect
+            y = y_centered
+            return x, y
+
+        filtered = []
+        for _, row in fixations_norm.iterrows():
+            x, y = norm_to_height_units(row['x'], row['y'])
+
+            if abs(x) <= img_width_units / 2 and abs(y) <= img_height_units / 2:
+                filtered.append({'x': x, 'y': y, 'duration': row['duration']})
+
+        return pd.DataFrame(filtered)
+
 
     def _plot_scanpath(self):
         """
