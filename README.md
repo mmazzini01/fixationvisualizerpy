@@ -8,24 +8,20 @@ A Python package for visualizing eye tracking fixation data. This package provid
 - Create saliency maps with customizable Gaussian blur
 - Support for both normalized and absolute coordinates
 - Command-line interface for easy usage
+- Support for multiple eye-tracking devices (Tobii and Gazepoint)
+- Saliency map comparison and evaluation tools
 
 ## Installation
 
-```bash
-pip install fixation_visualizer
-```
-
-Or install from source:
+### From Git Repository
 
 ```bash
-git clone https://github.com/mmazzini01/fixationvisualizerpy.git
-cd fixationvisualizerpy
-pip install -e .
+pip install git+https://github.com/mmazzini01/fixationvisualizerpy.git
 ```
 
 ## Usage
 
-### As a Python Package
+### Basic Usage
 
 ```python
 from fixation_visualizer import FixationVisualizer
@@ -33,7 +29,8 @@ from fixation_visualizer import FixationVisualizer
 # Create visualization
 visualizer = FixationVisualizer(
     image_path="path/to/image.jpg",
-    csv_path="path/to/fixations.csv",
+    fixation_df=your_fixation_dataframe,  # DataFrame with x, y, duration columns
+    output_path="path/to/output",
     mode="both",  # Options: "both", "scanpath", "saliency"
     sigma=10,     # Gaussian blur sigma
     alpha=0.6,    # Transparency of the overlay
@@ -41,42 +38,61 @@ visualizer = FixationVisualizer(
 )
 ```
 
-### Command Line Interface
+### Multiple Device Support
 
-```bash
-python examples/run_visualizer.py -i path/to/image.jpg -c path/to/fixations.csv
+```python
+from fixation_visualizer import DualDeviceFixationVisualizer
+
+# Process data from multiple eye-tracking devices
+visualizer = DualDeviceFixationVisualizer(
+    users_folder='users',
+    images_folder='images',
+    n_prompt=45,
+    fixation_time=5000
+)
 ```
 
-Optional arguments:
-- `-m, --mode`: Visualization mode (both/scanpath/saliency)
-- `-s, --sigma`: Sigma value for Gaussian blur
-- `-a, --alpha`: Alpha value for overlay transparency
-- `-n, --normalized`: Flag for normalized coordinates
+### Saliency Map Evaluation
 
-## Example Usage
+```python
+from fixation_visualizer import SaliencyEvaluator
 
-The package includes example files in the `examples` directory:
-
-```bash
-# Run with example files
-python examples/run_visualizer.py -i examples/face.jpg -c examples/eye_tracking_raw2_fixations.csv
+# Evaluate saliency maps
+evaluator = SaliencyEvaluator(
+    user_root="users",
+    synthetic_salmaps_root="salmaps",
+    original_images_root="images",
+    output_dir="salmaps_vis_avg",
+    n_prompts=45
+)
 ```
-
-The results will be saved in the `results` directory.
 
 ## Input Format
 
-The CSV file should contain the following columns:
+The fixation data should be provided as a pandas DataFrame with the following columns:
 - `x`: X-coordinate of fixation (normalized or absolute)
 - `y`: Y-coordinate of fixation (normalized or absolute)
 - `duration`: Duration of fixation in milliseconds
 
 ## Output
 
-The visualizations are saved in the `results` directory:
+The visualizations are saved in the specified output directory:
 - `{image_name}_scanpath.png`: Visualization of fixation sequence
 - `{image_name}_saliency_map.png`: Heat map of fixation density
+- `{image_name}_saliency_map_vis.png`: Overlay of saliency map on original image
+
+## Dependencies
+
+- numpy >= 1.19.0
+- pandas >= 1.2.0
+- opencv-python >= 4.5.0
+- matplotlib >= 3.3.0
+- scipy >= 1.7.0
 
 ## Author
 
 Matteo Mazzini (matteo.mazzini@estudiantat.upc.edu)
+
+## License
+
+This project is licensed under the MIT License - see the LICENSE file for details.

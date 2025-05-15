@@ -1,4 +1,9 @@
 from .visualizer import FixationVisualizer
+from .dual_device_visualizer import DualDeviceFixationVisualizer
+from .saliency_comparison import SaliencyEvaluator
 
-__version__ = "0.1.0"
-__all__ = ["FixationVisualizer"] 
+__all__ = [
+    "FixationVisualizer",
+    "DualDeviceFixationVisualizer",
+    "SaliencyEvaluator"
+]
