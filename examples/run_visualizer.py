@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-from dual_device_visualizer import DualDeviceFixationVisualizer
-from saliency_comparison import SaliencyEvaluator
+from fixation_visualizer.dual_device_visualizer import DualDeviceFixationVisualizer
+from fixation_visualizer.saliency_comparison import SaliencyEvaluator
 
 def main():
     print("Running dual device visualizer...")
