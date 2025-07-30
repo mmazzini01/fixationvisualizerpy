@@ -6,10 +6,8 @@ A Python package for visualizing eye tracking fixation data. This package provid
 
 - Generate scanpath visualizations showing the sequence of fixations
 - Create saliency maps with customizable Gaussian blur
-- Support for both normalized and absolute coordinates
-- Command-line interface for easy usage
 - Support for multiple eye-tracking devices (Tobii and Gazepoint)
-- Saliency map comparison and evaluation tools
+- Saliency map comparison and evaluation tools with the synthetically generated ones
 
 ## Installation
 
