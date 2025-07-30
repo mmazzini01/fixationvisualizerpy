@@ -21,7 +21,7 @@ class DualDeviceFixationVisualizer:
         users_folder (str): Path to the folder containing user data. Each user folder should contain
                            two CSV files: one for Tobii data and one for Gazepoint data.
         images_folder (str): Path to the folder containing the image prompts to be analyzed.
-        n_prompt (int): Number of image prompts to process (default: 45).
+        n_prompt (int): Number of image prompts to process (default: 30).
         fixation_time (int): Maximum duration in milliseconds to analyze for each image (default: 5000).
    
     Output:
