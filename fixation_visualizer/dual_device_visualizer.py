@@ -23,13 +23,13 @@ class DualDeviceFixationVisualizer:
         images_folder (str): Path to the folder containing the image prompts to be analyzed.
         n_prompt (int): Number of image prompts to process (default: 45).
         fixation_time (int): Maximum duration in milliseconds to analyze for each image (default: 5000).
-    
+   
     Output:
         For each user and each image prompt, generates two visualization results:
         - results_tobii/: Contains saliency maps with and visual overlays for each image
         - results_gazepoint/: Contains saliency maps with and visual overlays for each image
     """
-    def __init__(self, users_folder='users', images_folder='images', n_prompt=45, fixation_time=5000):
+    def __init__(self, users_folder='users', images_folder='images', n_prompt=30, fixation_time=5000):
         self.users_folder = users_folder
         self.images_folder = images_folder
         self.n_prompt = n_prompt
@@ -38,17 +38,17 @@ class DualDeviceFixationVisualizer:
 
     def process_user_data(self):
         for user_folder in os.listdir(self.users_folder):
-            joined_path = os.path.join(self.users_folder, user_folder)
+            if 'vertices' in user_folder:
+                continue
+            joined_path = os.path.join(self.users_folder, user_folder, 'session_1')
             fixations_tobii, fixations_gazepoint = None, None
 
             for f in os.listdir(joined_path):
                 if f.endswith('.csv') and 'tobii' in f.lower():
-                    fixations_tobii = pd.read_csv(joined_path + '/' + f)
-                elif f.endswith('.csv') and 'tobii' not in f.lower():
-                    fixations_gazepoint = pd.read_csv(joined_path + '/' + f)
+                    fixations_tobii = pd.read_csv(os.path.join(joined_path, f))
 
-            if fixations_tobii is None or fixations_gazepoint is None:
-                print(f"Missing Tobii or Gazepoint data in {joined_path}. Skipping.")
+            if fixations_tobii is None and fixations_gazepoint is None:
+                print(f"No Tobii or Gazepoint data in {joined_path}. Skipping.")
                 continue
 
             self._process_images(joined_path, fixations_tobii, fixations_gazepoint)
@@ -60,23 +60,32 @@ class DualDeviceFixationVisualizer:
                 print(f"Image {image_path} does not exist. Skipping.")
                 continue
 
-            if not str(i) in fixations_tobii['USER'].values:
-                print(f"User {i} not found in Tobii data. Skipping.")
-                continue
+            # Process Tobii if available
+            if fixations_tobii is not None:
+                if str(i) in fixations_tobii['USER'].values:
+                    df_filtered_tobii = self._filter_fixations(fixations_tobii, i)
+                    self._visualize(image_path, df_filtered_tobii, joined_path, 'results_tobii', 'tobii')
+                else:
+                    print(f"User {i} not found in Tobii data. Skipping.")
 
-            df_filtered_tobii = self._filter_fixations(fixations_tobii, i)
-            df_filtered_gzp = self._filter_fixations_gzp(fixations_gazepoint, i)
-
-            self._visualize(image_path, df_filtered_tobii, joined_path, 'results_tobii', 'tobii')
-            self._visualize(image_path, df_filtered_gzp, joined_path, 'results_gazepoint', 'gzp')
+            # Process Gazepoint if available
+            if fixations_gazepoint is not None:
+                # Try to infer user column name for Gazepoint, fallback to 'USER' if present
+                user_col = 'USER' if 'USER' in fixations_gazepoint.columns else None
+                if user_col is None or str(i) in fixations_gazepoint.get(user_col, []):
+                    df_filtered_gzp = self._filter_fixations_gzp(fixations_gazepoint, i)
+                    self._visualize(image_path, df_filtered_gzp, joined_path, 'results_gazepoint', 'gzp')
+                else:
+                    print(f"User {i} not found in Gazepoint data. Skipping.")
 
     def _filter_fixations(self, fixations, user_id):
         df_filtered = fixations[fixations['USER'] == str(user_id)].copy()
         df_filtered['effective_duration'] = df_filtered['recording_timestamp'] - df_filtered['recording_timestamp'].iloc[0]
         df_filtered = df_filtered[df_filtered['effective_duration'] <= self.fixation_time]
-        last_row = df_filtered.iloc[-1]
-        if last_row['effective_duration'] + last_row['duration'] > self.fixation_time:
-            df_filtered.at[last_row.name, 'duration'] = self.fixation_time - last_row['effective_duration']
+        if not df_filtered.empty:
+            last_row = df_filtered.iloc[-1]
+            if last_row['effective_duration'] + last_row['duration'] > self.fixation_time:
+                df_filtered.at[last_row.name, 'duration'] = self.fixation_time - last_row['effective_duration']
         return df_filtered
 
     def _filter_fixations_gzp(self, fixations, user_id):
